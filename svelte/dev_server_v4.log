@@ -1,0 +1,10 @@
+
+> comfyui-browser@0.0.1 dev
+> vite dev
+
+Port 5173 is in use, trying another one...
+
+  VITE v5.0.10  ready in 1323 ms
+
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: use --host to expose

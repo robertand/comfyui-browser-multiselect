@@ -32,6 +32,20 @@
   let selectAll = false;
   let selectMode = false;
 
+  import { browser } from '$app/environment';
+
+  $: {
+    if (browser && window.parent) {
+      window.parent.postMessage({ type: "selectionChanged", count: selectedFiles.size }, "*");
+    }
+  }
+
+  $: {
+    if (browser && window.parent) {
+      window.parent.postMessage({ type: "selectModeChanged", active: selectMode }, "*");
+    }
+  }
+
   $: filteredFiles = files
     .filter((f) => searchRegex.test(f.name.toLowerCase()))
     .slice(0, showCursor);
@@ -78,14 +92,29 @@
     loaded = true;
   }
 
+  function handleMessage(event: MessageEvent) {
+    if (event.data.type === "toggleSelectMode") {
+      selectMode = !selectMode;
+      if (!selectMode) {
+        selectedFiles.clear();
+        selectedFiles = selectedFiles;
+        selectAll = false;
+      }
+    } else if (event.data.type === "downloadSelected") {
+      downloadSelected();
+    } else if (event.data.type === "deleteSelected") {
+      deleteSelected();
+    }
+  }
+
   onMount(async () => {
     //@ts-ignore
     comfyApp = window.top.app;
 
     //@ts-ignore
-    window.top.addEventListener("comfyuiBrowserShow", () => {
-      refresh();
-    });
+    window.top.addEventListener("comfyuiBrowserShow", refresh);
+
+    window.addEventListener("message", handleMessage);
 
     folderPath = '';
 
@@ -94,6 +123,12 @@
       //@ts-ignore
       scrollTop = (e.target.scrollingElement as HTMLElement).scrollTop;
     });
+
+    return () => {
+      //@ts-ignore
+      window.top.removeEventListener("comfyuiBrowserShow", refresh);
+      window.removeEventListener("message", handleMessage);
+    };
   });
 
   async function onCollect(file: any) {
@@ -230,17 +265,6 @@
 
   <div class="basis-1/2 flex flex-row items-center justify-end gap-2 pr-4">
     {#if selectMode}
-      {#if selectedFiles.size > 0}
-        <button on:click={downloadSelected} class="btn btn-primary btn-sm rounded-none">
-          {tt('Download selected')} ({selectedFiles.size})
-        </button>
-        <button on:click={deleteSelected} class="btn btn-error btn-sm rounded-none">
-          {tt('Delete selected')} ({selectedFiles.size})
-        </button>
-        <button on:click={() => { selectedFiles.clear(); selectedFiles = selectedFiles; selectAll = false; }} class="btn btn-ghost btn-sm rounded-none">
-          {tt('Clear selection')}
-        </button>
-      {/if}
       <div class="form-control">
         <label class="label cursor-pointer gap-2">
           <span class="label-text">{tt('Select All')}</span>
@@ -248,9 +272,6 @@
         </label>
       </div>
     {/if}
-    <button on:click={() => { selectMode = !selectMode; if (!selectMode) { selectedFiles.clear(); selectedFiles = selectedFiles; selectAll = false; } }} class="btn {selectMode ? 'btn-accent' : 'btn-ghost'} btn-sm rounded-none">
-      {tt('Select Mode')}
-    </button>
     <input
       type="text"
       placeholder={tt('searchInput.placeholder')}

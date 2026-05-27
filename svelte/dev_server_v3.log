@@ -35,3 +35,45 @@ Error: connect ECONNREFUSED 127.0.0.1:8188
 10:00:29 AM [vite] page reload .svelte-kit/generated/client/app.js
 10:00:29 AM [vite] page reload .svelte-kit/generated/client/matchers.js
 10:00:29 AM [vite] page reload .svelte-kit/generated/server/internal.js
+3:21:38 PM [vite] hmr update /src/routes/FilesList.svelte, /src/app.sass
+3:23:31 PM [vite] page reload .svelte-kit/generated/client/nodes/0.js
+3:23:31 PM [vite] page reload .svelte-kit/generated/client/nodes/1.js
+3:23:31 PM [vite] page reload .svelte-kit/generated/client/nodes/3.js
+3:23:31 PM [vite] page reload .svelte-kit/generated/client/app.js
+3:23:31 PM [vite] page reload .svelte-kit/generated/client/matchers.js
+3:23:31 PM [vite] page reload .svelte-kit/generated/server/internal.js
+3:24:43 PM [vite] hmr update /src/routes/FilesList.svelte, /src/app.sass
+3:24:48 PM [vite] page reload .svelte-kit/generated/client/nodes/0.js
+3:24:48 PM [vite] page reload .svelte-kit/generated/client/nodes/1.js
+3:24:48 PM [vite] page reload .svelte-kit/generated/client/nodes/3.js
+3:24:48 PM [vite] page reload .svelte-kit/generated/client/app.js
+3:24:48 PM [vite] page reload .svelte-kit/generated/client/matchers.js
+3:24:48 PM [vite] page reload .svelte-kit/generated/server/internal.js
+3:36:44 PM [vite] page reload .svelte-kit/generated/client/nodes/0.js
+3:36:44 PM [vite] page reload .svelte-kit/generated/client/nodes/1.js
+3:36:44 PM [vite] page reload .svelte-kit/generated/client/nodes/3.js
+3:36:44 PM [vite] page reload .svelte-kit/generated/client/app.js
+3:36:44 PM [vite] page reload .svelte-kit/generated/client/matchers.js
+3:36:44 PM [vite] page reload .svelte-kit/generated/server/internal.js
+3:38:10 PM [vite] hmr update /src/routes/FilesList.svelte, /src/app.sass
+3:38:16 PM [vite] page reload .svelte-kit/generated/client/nodes/0.js
+3:38:16 PM [vite] page reload .svelte-kit/generated/client/nodes/1.js
+3:38:16 PM [vite] page reload .svelte-kit/generated/client/nodes/3.js
+3:38:16 PM [vite] page reload .svelte-kit/generated/client/app.js
+3:38:16 PM [vite] page reload .svelte-kit/generated/client/matchers.js
+3:38:16 PM [vite] page reload .svelte-kit/generated/server/internal.js
+3:40:55 PM [vite] page reload .svelte-kit/generated/client/nodes/1.js
+3:40:55 PM [vite] page reload .svelte-kit/generated/client/nodes/0.js
+3:40:55 PM [vite] page reload .svelte-kit/generated/client/nodes/3.js
+3:40:55 PM [vite] page reload .svelte-kit/generated/client/app.js
+3:40:55 PM [vite] page reload .svelte-kit/generated/client/matchers.js
+3:40:55 PM [vite] page reload .svelte-kit/generated/server/internal.js
+3:42:56 PM [vite] page reload .svelte-kit/generated/client/nodes/1.js
+3:42:56 PM [vite] page reload .svelte-kit/generated/client/nodes/3.js
+3:42:56 PM [vite] page reload .svelte-kit/generated/client/nodes/0.js
+3:42:56 PM [vite] page reload .svelte-kit/generated/client/app.js
+3:42:56 PM [vite] page reload .svelte-kit/generated/client/matchers.js
+3:42:56 PM [vite] page reload .svelte-kit/generated/server/internal.js
+3:44:01 PM [vite] http proxy error at /browser/files?folder_type=outputs:
+Error: connect ECONNREFUSED 127.0.0.1:8188
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)

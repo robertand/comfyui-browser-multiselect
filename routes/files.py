@@ -31,7 +31,10 @@ async def api_delete_file(request):
     folder_type = json_data.get('folder_type', 'outputs')
 
     parent_path = get_parent_path(folder_type)
-    target_path = path.join(parent_path, folder_path, filename)
+    target_path = path.abspath(path.join(parent_path, folder_path, filename))
+    if not target_path.startswith(path.abspath(parent_path)):
+        return web.Response(status=403)
+
     if not path.exists(target_path):
         return web.json_response(status=404)
 
@@ -61,8 +64,12 @@ async def api_update_file(request):
     new_filename = new_data['filename']
     notes = new_data['notes']
 
-    old_file_path = path.join(parent_path, folder_path, filename)
-    new_file_path = path.join(parent_path, folder_path, new_filename)
+    old_file_path = path.abspath(path.join(parent_path, folder_path, filename))
+    new_file_path = path.abspath(path.join(parent_path, folder_path, new_filename))
+
+    if not old_file_path.startswith(path.abspath(parent_path)) or \
+       not new_file_path.startswith(path.abspath(parent_path)):
+        return web.Response(status=403)
 
     if not path.exists(old_file_path):
         return web.Response(status=404)
@@ -99,7 +106,9 @@ async def api_view_file(request):
         return web.Response(status=404)
 
     parent_path = get_parent_path(folder_type)
-    file_path = path.join(parent_path, folder_path, filename)
+    file_path = path.abspath(path.join(parent_path, folder_path, filename))
+    if not file_path.startswith(path.abspath(parent_path)):
+        return web.Response(status=403)
 
     if not path.exists(file_path):
         return web.Response(status=404)
@@ -135,7 +144,9 @@ async def api_bulk_delete(request):
         if '..' in folder_path or '..' in filename:
             continue
 
-        target_path = path.join(parent_path, folder_path, filename)
+        target_path = path.abspath(path.join(parent_path, folder_path, filename))
+        if not target_path.startswith(path.abspath(parent_path)):
+            continue
 
         if path.exists(target_path):
             if path.isdir(target_path):
@@ -166,7 +177,9 @@ async def api_download_files(request):
             if '..' in folder_path or '..' in filename:
                 continue
 
-            file_path = path.join(parent_path, folder_path, filename)
+            file_path = path.abspath(path.join(parent_path, folder_path, filename))
+            if not file_path.startswith(path.abspath(parent_path)):
+                continue
 
             if path.exists(file_path):
                 if path.isfile(file_path):

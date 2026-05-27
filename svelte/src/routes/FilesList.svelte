@@ -30,6 +30,7 @@
 
   let selectedFiles: Set<string> = new Set();
   let selectAll = false;
+  let selectMode = false;
 
   $: filteredFiles = files
     .filter((f) => searchRegex.test(f.name.toLowerCase()))
@@ -71,6 +72,7 @@
     selectedFiles.clear();
     selectedFiles = selectedFiles;
     selectAll = false;
+    selectMode = false;
     loaded = false;
     files = await fetchFiles(folderType, comfyUrl, folderPath);
     loaded = true;
@@ -227,23 +229,28 @@
   </ul>
 
   <div class="basis-1/2 flex flex-row items-center justify-end gap-2 pr-4">
-    {#if selectedFiles.size > 0}
-      <button on:click={downloadSelected} class="btn btn-primary btn-sm rounded-none">
-        {tt('Download selected')} ({selectedFiles.size})
-      </button>
-      <button on:click={deleteSelected} class="btn btn-error btn-sm rounded-none">
-        {tt('Delete selected')} ({selectedFiles.size})
-      </button>
-      <button on:click={() => { selectedFiles.clear(); selectedFiles = selectedFiles; selectAll = false; }} class="btn btn-ghost btn-sm rounded-none">
-        {tt('Clear selection')}
-      </button>
+    {#if selectMode}
+      {#if selectedFiles.size > 0}
+        <button on:click={downloadSelected} class="btn btn-primary btn-sm rounded-none">
+          {tt('Download selected')} ({selectedFiles.size})
+        </button>
+        <button on:click={deleteSelected} class="btn btn-error btn-sm rounded-none">
+          {tt('Delete selected')} ({selectedFiles.size})
+        </button>
+        <button on:click={() => { selectedFiles.clear(); selectedFiles = selectedFiles; selectAll = false; }} class="btn btn-ghost btn-sm rounded-none">
+          {tt('Clear selection')}
+        </button>
+      {/if}
+      <div class="form-control">
+        <label class="label cursor-pointer gap-2">
+          <span class="label-text">{tt('Select All')}</span>
+          <input type="checkbox" class="checkbox checkbox-sm" checked={selectAll} on:change={toggleSelectAll} />
+        </label>
+      </div>
     {/if}
-    <div class="form-control">
-      <label class="label cursor-pointer gap-2">
-        <span class="label-text">{tt('Select All')}</span>
-        <input type="checkbox" class="checkbox checkbox-sm" checked={selectAll} on:change={toggleSelectAll} />
-      </label>
-    </div>
+    <button on:click={() => { selectMode = !selectMode; if (!selectMode) { selectedFiles.clear(); selectedFiles = selectedFiles; selectAll = false; } }} class="btn {selectMode ? 'btn-accent' : 'btn-ghost'} btn-sm rounded-none">
+      {tt('Select Mode')}
+    </button>
     <input
       type="text"
       placeholder={tt('searchInput.placeholder')}
@@ -257,12 +264,14 @@
   {#each filteredFiles as file}
     {#if WHITE_EXTS.includes(file.fileType)}
       <div class="p-2 bg-info-content relative">
-        <input
-          type="checkbox"
-          class="checkbox checkbox-xs absolute top-1 left-1 z-10 opacity-30 hover:opacity-100 transition-opacity"
-          checked={selectedFiles.has(getFileKey(file))}
-          on:change={() => toggleSelect(file)}
-        />
+        {#if selectMode}
+          <input
+            type="checkbox"
+            class="checkbox checkbox-xs absolute top-1 left-1 z-10 opacity-30 hover:opacity-100 transition-opacity"
+            checked={selectedFiles.has(getFileKey(file))}
+            on:change={() => toggleSelect(file)}
+          />
+        {/if}
         <div class="flex items-center">
           <MediaShow {file} styleClass="w-full h-16 sm:h-36" {onClickDir} />
         </div>

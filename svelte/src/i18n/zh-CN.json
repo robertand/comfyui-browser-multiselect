@@ -58,6 +58,7 @@
     "Delete selected": "删除所选",
     "Clear selection": "清除选择",
     "Select All": "全选",
+    "Select Mode": "选择模式",
     "Delete selected files confirm": "确认删除这 {n} 个文件吗？",
     "Deleted files success": "成功删除 {n} 个文件"
   },

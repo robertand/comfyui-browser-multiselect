@@ -25,3 +25,13 @@ Browserslist: caniuse-lite is outdated. Please run:
 7:39:30 AM [vite] http proxy error at /browser/files?folder_type=outputs:
 Error: connect ECONNREFUSED 127.0.0.1:8188
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+9:57:07 AM [vite] hmr update /src/routes/FilesList.svelte, /src/app.sass
+9:58:13 AM [vite] hmr update /src/routes/FilesList.svelte, /src/app.sass
+9:59:11 AM [vite] page reload src/i18n/en-US.json
+9:59:15 AM [vite] page reload src/i18n/zh-CN.json
+10:00:29 AM [vite] page reload .svelte-kit/generated/client/nodes/0.js
+10:00:29 AM [vite] page reload .svelte-kit/generated/client/nodes/1.js
+10:00:29 AM [vite] page reload .svelte-kit/generated/client/nodes/3.js
+10:00:29 AM [vite] page reload .svelte-kit/generated/client/app.js
+10:00:29 AM [vite] page reload .svelte-kit/generated/client/matchers.js
+10:00:29 AM [vite] page reload .svelte-kit/generated/server/internal.js

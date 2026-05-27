@@ -108,6 +108,26 @@ class BrowserDialog extends ComfyDialog {
       }
     });
 
+    this.selectAllBtn = $el("button", {
+      type: "button",
+      textContent: "Select All",
+      style: { display: "none" },
+      onclick: () => {
+        const iframe = document.getElementById("comfy-browser-iframe");
+        iframe.contentWindow.postMessage({ type: "selectAll" }, "*");
+      }
+    });
+
+    this.selectNoneBtn = $el("button", {
+      type: "button",
+      textContent: "Select None",
+      style: { display: "none" },
+      onclick: () => {
+        const iframe = document.getElementById("comfy-browser-iframe");
+        iframe.contentWindow.postMessage({ type: "selectNone" }, "*");
+      }
+    });
+
     this.downloadBtn = $el("button", {
       type: "button",
       textContent: "Download (0)",
@@ -138,6 +158,8 @@ class BrowserDialog extends ComfyDialog {
       }
       if (event.data.type === "selectModeChanged") {
         this.selectionModeBtn.style.backgroundColor = event.data.active ? "var(--comfy-input-bg)" : "";
+        this.selectAllBtn.style.display = event.data.active ? "inline-block" : "none";
+        this.selectNoneBtn.style.display = event.data.active ? "inline-block" : "none";
         if (!event.data.active) {
           this.downloadBtn.style.display = "none";
           this.deleteBtn.style.display = "none";
@@ -158,6 +180,8 @@ class BrowserDialog extends ComfyDialog {
         browseBtn,
         toggleSidePanelBtn,
         this.selectionModeBtn,
+        this.selectAllBtn,
+        this.selectNoneBtn,
         this.downloadBtn,
         this.deleteBtn,
       ]),

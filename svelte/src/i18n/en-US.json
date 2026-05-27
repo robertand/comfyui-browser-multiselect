@@ -59,6 +59,7 @@
     "Clear selection": "Clear selection",
     "Select All": "Select All",
     "Select Mode": "Select Mode",
+    "Select None": "Select None",
     "Delete selected files confirm": "You want to delete {n} files?",
     "Deleted files success": "Deleted {n} files"
   },

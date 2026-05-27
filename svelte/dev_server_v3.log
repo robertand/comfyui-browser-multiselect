@@ -77,3 +77,12 @@ Error: connect ECONNREFUSED 127.0.0.1:8188
 3:44:01 PM [vite] http proxy error at /browser/files?folder_type=outputs:
 Error: connect ECONNREFUSED 127.0.0.1:8188
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+5:14:03 PM [vite] hmr update /src/routes/FilesList.svelte, /src/app.sass
+5:15:03 PM [vite] page reload src/i18n/en-US.json
+5:15:22 PM [vite] page reload src/i18n/zh-CN.json
+5:16:27 PM [vite] page reload .svelte-kit/generated/client/nodes/0.js
+5:16:27 PM [vite] page reload .svelte-kit/generated/client/nodes/1.js
+5:16:27 PM [vite] page reload .svelte-kit/generated/client/nodes/3.js
+5:16:27 PM [vite] page reload .svelte-kit/generated/client/app.js
+5:16:27 PM [vite] page reload .svelte-kit/generated/client/matchers.js
+5:16:27 PM [vite] page reload .svelte-kit/generated/server/internal.js

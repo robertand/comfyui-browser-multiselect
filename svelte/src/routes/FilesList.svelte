@@ -104,6 +104,18 @@
       downloadSelected();
     } else if (event.data.type === "deleteSelected") {
       deleteSelected();
+    } else if (event.data.type === "selectAll") {
+      filteredFiles.forEach(f => {
+        if (f.type !== 'dir') {
+          selectedFiles.add(getFileKey(f));
+        }
+      });
+      selectedFiles = selectedFiles;
+      selectAll = true;
+    } else if (event.data.type === "selectNone") {
+      selectedFiles.clear();
+      selectedFiles = selectedFiles;
+      selectAll = false;
     }
   }
 
@@ -115,6 +127,10 @@
     window.top.addEventListener("comfyuiBrowserShow", refresh);
 
     window.addEventListener("message", handleMessage);
+
+    if (browser && window.parent) {
+      window.parent.postMessage({ type: "selectModeChanged", active: selectMode }, "*");
+    }
 
     folderPath = '';
 
@@ -264,14 +280,6 @@
   </ul>
 
   <div class="basis-1/2 flex flex-row items-center justify-end gap-2 pr-4">
-    {#if selectMode}
-      <div class="form-control">
-        <label class="label cursor-pointer gap-2">
-          <span class="label-text">{tt('Select All')}</span>
-          <input type="checkbox" class="checkbox checkbox-sm" checked={selectAll} on:change={toggleSelectAll} />
-        </label>
-      </div>
-    {/if}
     <input
       type="text"
       placeholder={tt('searchInput.placeholder')}

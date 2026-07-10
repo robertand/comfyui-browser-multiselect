@@ -3,6 +3,8 @@ import json
 from os import path
 import os
 import shutil
+import zipfile
+from io import BytesIO
 
 from ..utils import get_target_folder_files, get_parent_path, get_info_filename, \
     image_extensions, video_extensions
@@ -29,7 +31,10 @@ async def api_delete_file(request):
     folder_type = json_data.get('folder_type', 'outputs')
 
     parent_path = get_parent_path(folder_type)
-    target_path = path.join(parent_path, folder_path, filename)
+    target_path = path.abspath(path.join(parent_path, folder_path, filename))
+    if not target_path.startswith(path.abspath(parent_path)):
+        return web.Response(status=403)
+
     if not path.exists(target_path):
         return web.json_response(status=404)
 
@@ -59,8 +64,12 @@ async def api_update_file(request):
     new_filename = new_data['filename']
     notes = new_data['notes']
 
-    old_file_path = path.join(parent_path, folder_path, filename)
-    new_file_path = path.join(parent_path, folder_path, new_filename)
+    old_file_path = path.abspath(path.join(parent_path, folder_path, filename))
+    new_file_path = path.abspath(path.join(parent_path, folder_path, new_filename))
+
+    if not old_file_path.startswith(path.abspath(parent_path)) or \
+       not new_file_path.startswith(path.abspath(parent_path)):
+        return web.Response(status=403)
 
     if not path.exists(old_file_path):
         return web.Response(status=404)
@@ -97,7 +106,9 @@ async def api_view_file(request):
         return web.Response(status=404)
 
     parent_path = get_parent_path(folder_type)
-    file_path = path.join(parent_path, folder_path, filename)
+    file_path = path.abspath(path.join(parent_path, folder_path, filename))
+    if not file_path.startswith(path.abspath(parent_path)):
+        return web.Response(status=403)
 
     if not path.exists(file_path):
         return web.Response(status=404)
@@ -116,4 +127,76 @@ async def api_view_file(request):
         body=media_file,
         content_type=content_type,
         headers={"Content-Disposition": f"filename=\"{filename}\""}
+    )
+
+
+async def api_bulk_delete(request):
+    json_data = await request.json()
+    folder_type = json_data.get('folder_type', 'outputs')
+    files_list = json_data.get('files', [])
+
+    deleted = 0
+    parent_path = get_parent_path(folder_type)
+
+    for item in files_list:
+        filename = item['filename']
+        folder_path = item.get('folder_path', '')
+        if '..' in folder_path or '..' in filename:
+            continue
+
+        target_path = path.abspath(path.join(parent_path, folder_path, filename))
+        if not target_path.startswith(path.abspath(parent_path)):
+            continue
+
+        if path.exists(target_path):
+            if path.isdir(target_path):
+                shutil.rmtree(target_path)
+            else:
+                os.remove(target_path)
+
+            info_path = get_info_filename(target_path)
+            if path.exists(info_path):
+                os.remove(info_path)
+            deleted += 1
+
+    return web.json_response({"deleted": deleted})
+
+
+async def api_download_files(request):
+    json_data = await request.json()
+    folder_type = json_data.get('folder_type', 'outputs')
+    files_list = json_data.get('files', [])
+
+    parent_path = get_parent_path(folder_type)
+    zip_buffer = BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for item in files_list:
+            filename = item['filename']
+            folder_path = item.get('folder_path', '')
+            if '..' in folder_path or '..' in filename:
+                continue
+
+            file_path = path.abspath(path.join(parent_path, folder_path, filename))
+            if not file_path.startswith(path.abspath(parent_path)):
+                continue
+
+            if path.exists(file_path):
+                if path.isfile(file_path):
+                    arcname = path.join(folder_path, filename) if folder_path else filename
+                    zip_file.write(file_path, arcname)
+                elif path.isdir(file_path):
+                    for root, dirs, files in os.walk(file_path):
+                        for file in files:
+                            full_path = path.join(root, file)
+                            rel_path = path.relpath(full_path, parent_path)
+                            zip_file.write(full_path, rel_path)
+
+    zip_buffer.seek(0)
+    return web.Response(
+        body=zip_buffer.read(),
+        content_type='application/zip',
+        headers={
+            "Content-Disposition": 'attachment; filename="comfy_browser.zip"'
+        }
     )

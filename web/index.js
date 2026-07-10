@@ -57,13 +57,16 @@ class BrowserDialog extends ComfyDialog {
         style: {
           width: "100%",
           height: "100%",
+          display: "flex",
+          flexDirection: "column",
         },
       }, [
         $el("iframe", {
+          id: "comfy-browser-iframe",
           src: browserUrl + "?timestamp=" + Date.now(),
           style: {
             width: "100%",
-            height: "100%",
+            flex: "1 1 auto",
           },
         }),
         ...this.createButtons(),
@@ -95,25 +98,92 @@ class BrowserDialog extends ComfyDialog {
       textContent: "Side/Center",
       onclick: () => this.toggleSidePanel(),
     });
+
+    this.selectionModeBtn = $el("button", {
+      type: "button",
+      textContent: "Selection Mode",
+      onclick: () => {
+        const iframe = document.getElementById("comfy-browser-iframe");
+        iframe.contentWindow.postMessage({ type: "toggleSelectMode" }, "*");
+      }
+    });
+
+    this.selectAllBtn = $el("button", {
+      type: "button",
+      textContent: "Select All",
+      style: { display: "none" },
+      onclick: () => {
+        const iframe = document.getElementById("comfy-browser-iframe");
+        iframe.contentWindow.postMessage({ type: "selectAll" }, "*");
+      }
+    });
+
+    this.selectNoneBtn = $el("button", {
+      type: "button",
+      textContent: "Select None",
+      style: { display: "none" },
+      onclick: () => {
+        const iframe = document.getElementById("comfy-browser-iframe");
+        iframe.contentWindow.postMessage({ type: "selectNone" }, "*");
+      }
+    });
+
+    this.downloadBtn = $el("button", {
+      type: "button",
+      textContent: "Download (0)",
+      style: { display: "none" },
+      onclick: () => {
+        const iframe = document.getElementById("comfy-browser-iframe");
+        iframe.contentWindow.postMessage({ type: "downloadSelected" }, "*");
+      }
+    });
+
+    this.deleteBtn = $el("button", {
+      type: "button",
+      textContent: "Delete (0)",
+      style: { display: "none", color: "var(--error-text)" },
+      onclick: () => {
+        const iframe = document.getElementById("comfy-browser-iframe");
+        iframe.contentWindow.postMessage({ type: "deleteSelected" }, "*");
+      }
+    });
+
+    window.addEventListener("message", (event) => {
+      if (event.data.type === "selectionChanged") {
+        const count = event.data.count;
+        this.downloadBtn.textContent = `Download (${count})`;
+        this.deleteBtn.textContent = `Delete (${count})`;
+        this.downloadBtn.style.display = count > 0 ? "inline-block" : "none";
+        this.deleteBtn.style.display = count > 0 ? "inline-block" : "none";
+      }
+      if (event.data.type === "selectModeChanged") {
+        this.selectionModeBtn.style.backgroundColor = event.data.active ? "var(--comfy-input-bg)" : "";
+        this.selectAllBtn.style.display = event.data.active ? "inline-block" : "none";
+        this.selectNoneBtn.style.display = event.data.active ? "inline-block" : "none";
+        if (!event.data.active) {
+          this.downloadBtn.style.display = "none";
+          this.deleteBtn.style.display = "none";
+        }
+      }
+    });
+
     return [
       $el("div", {
         style: {
-          marginTop: '10px'
+          marginTop: '10px',
+          display: 'flex',
+          gap: '5px',
+          flexWrap: 'wrap'
         }
       }, [
         closeBtn,
         browseBtn,
         toggleSidePanelBtn,
-        /*$el("span", {*/
-          /*textContent: "Tips: press 'B' to toggle me",*/
-          /*style: {*/
-            /*color: "var(--input-text)",*/
-            /*right: 0,*/
-            /*position: "absolute",*/
-            /*lineHeight: "28.5px",*/
-            /*marginRight: "2px",*/
-          /*},*/
-        /*}),*/
+        this.selectionModeBtn,
+        this.selectAllBtn,
+        this.selectNoneBtn,
+        this.downloadBtn,
+        this.deleteBtn,
       ]),
     ];
   }

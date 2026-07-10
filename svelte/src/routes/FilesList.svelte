@@ -28,14 +28,95 @@
   let searchRegex = new RegExp('');
   let scrollTop = 0;
 
+  let selectedFiles: Set<string> = new Set();
+  let selectAll = false;
+  let selectMode = false;
+
+  import { browser } from '$app/environment';
+
+  $: {
+    if (browser && window.parent) {
+      window.parent.postMessage({ type: "selectionChanged", count: selectedFiles.size }, "*");
+    }
+  }
+
+  $: {
+    if (browser && window.parent) {
+      window.parent.postMessage({ type: "selectModeChanged", active: selectMode }, "*");
+    }
+  }
+
+  $: filteredFiles = files
+    .filter((f) => searchRegex.test(f.name.toLowerCase()))
+    .slice(0, showCursor);
+
+  function getFileKey(file: any): string {
+    return `${file.folder_path || ''}/${file.name}`;
+  }
+
+  function toggleSelect(file: any) {
+    const key = getFileKey(file);
+    if (selectedFiles.has(key)) {
+      selectedFiles.delete(key);
+    } else {
+      selectedFiles.add(key);
+    }
+    selectedFiles = selectedFiles;
+  }
+
+  function toggleSelectAll() {
+    if (selectAll) {
+      selectedFiles.clear();
+    } else {
+      filteredFiles.forEach(f => {
+        if (f.type !== 'dir') {
+          selectedFiles.add(getFileKey(f));
+        }
+      });
+    }
+    selectedFiles = selectedFiles;
+    selectAll = !selectAll;
+  }
+
   $: tt = function(key: string) {
     return $t('filesList.' + key);
   }
 
   export async function refresh() {
+    selectedFiles.clear();
+    selectedFiles = selectedFiles;
+    selectAll = false;
+    selectMode = false;
     loaded = false;
     files = await fetchFiles(folderType, comfyUrl, folderPath);
     loaded = true;
+  }
+
+  function handleMessage(event: MessageEvent) {
+    if (event.data.type === "toggleSelectMode") {
+      selectMode = !selectMode;
+      if (!selectMode) {
+        selectedFiles.clear();
+        selectedFiles = selectedFiles;
+        selectAll = false;
+      }
+    } else if (event.data.type === "downloadSelected") {
+      downloadSelected();
+    } else if (event.data.type === "deleteSelected") {
+      deleteSelected();
+    } else if (event.data.type === "selectAll") {
+      filteredFiles.forEach(f => {
+        if (f.type !== 'dir') {
+          selectedFiles.add(getFileKey(f));
+        }
+      });
+      selectedFiles = selectedFiles;
+      selectAll = true;
+    } else if (event.data.type === "selectNone") {
+      selectedFiles.clear();
+      selectedFiles = selectedFiles;
+      selectAll = false;
+    }
   }
 
   onMount(async () => {
@@ -43,9 +124,13 @@
     comfyApp = window.top.app;
 
     //@ts-ignore
-    window.top.addEventListener("comfyuiBrowserShow", () => {
-      refresh();
-    });
+    window.top.addEventListener("comfyuiBrowserShow", refresh);
+
+    window.addEventListener("message", handleMessage);
+
+    if (browser && window.parent) {
+      window.parent.postMessage({ type: "selectModeChanged", active: selectMode }, "*");
+    }
 
     folderPath = '';
 
@@ -54,6 +139,12 @@
       //@ts-ignore
       scrollTop = (e.target.scrollingElement as HTMLElement).scrollTop;
     });
+
+    return () => {
+      //@ts-ignore
+      window.top.removeEventListener("comfyuiBrowserShow", refresh);
+      window.removeEventListener("message", handleMessage);
+    };
   });
 
   async function onCollect(file: any) {
@@ -101,6 +192,66 @@
     );
   }
 
+  async function deleteSelected() {
+    if (selectedFiles.size === 0) return;
+
+    const ret = confirm(tt('Delete selected files confirm').replace('{n}', selectedFiles.size.toString()));
+    if (!ret) return;
+
+    const filenames = Array.from(selectedFiles).map(key => {
+      const parts = key.split('/');
+      const name = parts.pop();
+      const folder_path = parts.join('/');
+      return { filename: name, folder_path: folder_path };
+    });
+
+    const res = await fetch(comfyUrl + '/browser/files/bulk_delete', {
+      method: 'POST',
+      body: JSON.stringify({
+        folder_type: folderType,
+        files: filenames,
+      }),
+    });
+
+    const count = selectedFiles.size;
+    refresh();
+    toast.show(
+      res.ok,
+      tt('Deleted files success').replace('{n}', count.toString()),
+      tt('Failed to delete the file'),
+    );
+  }
+
+  async function downloadSelected() {
+    if (selectedFiles.size === 0) return;
+
+    const filenames = Array.from(selectedFiles).map(key => {
+      const parts = key.split('/');
+      const name = parts.pop();
+      const folder_path = parts.join('/');
+      return { filename: name, folder_path: folder_path };
+    });
+
+    const res = await fetch(comfyUrl + '/browser/files/download', {
+      method: 'POST',
+      body: JSON.stringify({
+        folder_type: folderType,
+        files: filenames
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `comfyui_browser_${Date.now()}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+
   async function onClickDir(dir: any) {
     folderPath = dir.path;
   }
@@ -119,7 +270,7 @@
 </script>
 
 <div class="max-w-full text-sm breadcrumbs flex flex-row ml-4">
-  <ul class="basis-3/4">
+  <ul class="basis-1/2">
     <li>
       <button on:click={() => onClickPath(-1)}>{$t('common.rootDir')}</button>
     </li>
@@ -128,20 +279,28 @@
     {/each}
   </ul>
 
-  <input
-    type="text"
-    placeholder={tt('searchInput.placeholder')}
-    bind:value={searchQuery}
-    class="input input-bordered w-full h-full rounded-none border-slate-600 text-sm basis-1/4"
-  />
+  <div class="basis-1/2 flex flex-row items-center justify-end gap-2 pr-4">
+    <input
+      type="text"
+      placeholder={tt('searchInput.placeholder')}
+      bind:value={searchQuery}
+      class="input input-bordered h-8 rounded-none border-slate-600 text-sm w-48"
+    />
+  </div>
 </div>
 
 <div class="grid grid-cols-4 lg:grid-cols-6 gap-2">
-  {#each files
-    .filter((f) => searchRegex.test(f.name.toLowerCase()))
-    .slice(0, showCursor) as file}
+  {#each filteredFiles as file}
     {#if WHITE_EXTS.includes(file.fileType)}
-      <div class="p-2 bg-info-content">
+      <div class="p-2 bg-info-content relative">
+        {#if selectMode}
+          <input
+            type="checkbox"
+            class="checkbox checkbox-xs absolute top-1 left-1 z-10 opacity-30 hover:opacity-100 transition-opacity"
+            checked={selectedFiles.has(getFileKey(file))}
+            on:change={() => toggleSelect(file)}
+          />
+        {/if}
         <div class="flex items-center">
           <MediaShow {file} styleClass="w-full h-16 sm:h-36" {onClickDir} />
         </div>

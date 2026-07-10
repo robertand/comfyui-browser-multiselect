@@ -12,8 +12,10 @@ browser_app = web.Application()
 browser_app.add_routes([
     web.get("/files", files.api_get_files),
     web.delete("/files", files.api_delete_file),
+    web.post("/files/bulk_delete", files.api_bulk_delete),
     web.put("/files", files.api_update_file),
     web.get("/files/view", files.api_view_file),
+    web.post("/files/download", files.api_download_files),
 
     web.post("/collections", collections.api_add_to_collections),
     web.post("/collections/workflows", collections.api_create_new_workflow),
